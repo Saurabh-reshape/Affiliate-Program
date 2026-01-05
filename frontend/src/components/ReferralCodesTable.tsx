@@ -1,28 +1,37 @@
+import { useState } from 'react';
 import type { ReferralCode } from '../types';
+import UserListModal from './UserListModal';
+import { apiService } from '../services/api';
 
 interface ReferralCodesTableProps {
   codes: ReferralCode[];
 }
 
 export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
+  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState<boolean>(false);
+
+  const handleViewUsers = async (code: string) => {
+    try {
+      setLoadingUsers(true);
+      const response = await apiService.getReferralDetails(code);
+      if (response.success && response.data) {
+        setUsers(response.data);
+        setSelectedCode(code);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const getConversionRate = (code: ReferralCode) => {
-    if (code.clicks === 0) return '0.00%';
-    return ((code.conversions / code.clicks) * 100).toFixed(2) + '%';
   };
 
   return (
@@ -34,11 +43,11 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
             <tr>
               <th>Referral Code</th>
               <th>Created</th>
-              <th>Clicks</th>
-              <th>Conversions</th>
-              <th>Conversion Rate</th>
-              <th>Revenue</th>
+              <th>Total Conversions</th>
+              <th>Trial</th>
+              <th>Paid</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -59,20 +68,39 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
                   </div>
                 </td>
                 <td>{formatDate(code.createdAt)}</td>
-                <td>{code.clicks.toLocaleString()}</td>
                 <td>{code.conversions.toLocaleString()}</td>
-                <td>{getConversionRate(code)}</td>
-                <td className="revenue-cell">{formatCurrency(code.revenue)}</td>
+                <td>{code.trialConversions?.toLocaleString() || 0}</td>
+                <td>{code.paidConversions?.toLocaleString() || 0}</td>
                 <td>
                   <span className={`status-badge ${code.status}`}>
                     {code.status}
                   </span>
+                </td>
+                <td>
+                  <button
+                    className="view-users-button"
+                    onClick={() => handleViewUsers(code.code)}
+                    disabled={loadingUsers}
+                  >
+                    {loadingUsers ? 'Loading...' : 'View Users'}
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {selectedCode && (
+        <UserListModal
+          referralCode={selectedCode}
+          users={users}
+          onClose={() => {
+            setSelectedCode(null);
+            setUsers([]);
+          }}
+        />
+      )}
     </div>
   );
 }

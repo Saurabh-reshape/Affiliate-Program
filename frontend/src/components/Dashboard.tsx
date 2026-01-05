@@ -3,23 +3,35 @@ import Header from './Header';
 import StatsCard from './StatsCard';
 import ReferralCodesTable from './ReferralCodesTable';
 import PerformanceCharts from './PerformanceCharts';
+import LoadingSpinner from './LoadingSpinner';
+import ErrorMessage from './ErrorMessage';
 
 interface DashboardProps {
   user: User;
   referralCodes: ReferralCode[];
   stats: DashboardStats;
   timeSeriesData: TimeSeriesData[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
-export default function Dashboard({ user, referralCodes, stats, timeSeriesData }: DashboardProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+export default function Dashboard({ 
+  user, 
+  referralCodes, 
+  stats, 
+  timeSeriesData,
+  loading = false,
+  error = null,
+  onRetry
+}: DashboardProps) {
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} onRetry={onRetry} />;
+  }
 
   return (
     <div className="dashboard">
@@ -35,22 +47,22 @@ export default function Dashboard({ user, referralCodes, stats, timeSeriesData }
               icon="🔗"
             />
             <StatsCard
-              title="Total Clicks"
-              value={stats.totalClicks.toLocaleString()}
-              subtitle="All time"
-              icon="👆"
-            />
-            <StatsCard
               title="Total Conversions"
               value={stats.totalConversions.toLocaleString()}
-              subtitle={`${stats.conversionRate}% conversion rate`}
+              subtitle="All conversions"
               icon="✅"
             />
             <StatsCard
-              title="Total Revenue"
-              value={formatCurrency(stats.totalRevenue)}
-              subtitle={`Avg: ${formatCurrency(stats.averageRevenuePerConversion)} per conversion`}
-              icon="💰"
+              title="Trial Conversions"
+              value={stats.trialConversions.toLocaleString()}
+              subtitle="Trial subscriptions"
+              icon="🆓"
+            />
+            <StatsCard
+              title="Paid Conversions"
+              value={stats.paidConversions.toLocaleString()}
+              subtitle="Paid subscriptions"
+              icon="💳"
             />
           </div>
 

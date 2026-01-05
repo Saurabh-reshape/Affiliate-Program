@@ -10,10 +10,10 @@ export interface ReferralCode {
   id: string;
   code: string;
   createdAt: string;
-  clicks: number;
-  conversions: number;
-  revenue: number;
+  conversions: number; // trial + paid conversions
   status: 'active' | 'inactive';
+  trialConversions?: number;
+  paidConversions?: number;
 }
 
 export interface ReferralEvent {
@@ -28,16 +28,14 @@ export interface ReferralEvent {
 
 export interface DashboardStats {
   totalReferralCodes: number;
-  totalClicks: number;
-  totalConversions: number;
-  totalRevenue: number;
-  conversionRate: number;
-  averageRevenuePerConversion: number;
+  totalConversions: number; // total trial + paid
+  trialConversions: number;
+  paidConversions: number;
 }
 
 export interface TimeSeriesData {
   date: string;
-  clicks: number;
   conversions: number;
-  revenue: number;
+  trialConversions: number;
+  paidConversions: number;
 }
