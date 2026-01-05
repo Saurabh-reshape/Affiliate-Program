@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { transformReferralCodes, calculateDashboardStats } from '../utils/transformers';
 import { generateTimeSeriesWithFilledDates } from '../utils/timeSeries';
+import { getCommissionRates } from '../config/commission';
 import type { ReferralCode, DashboardStats, TimeSeriesData } from '../types';
 import type { PurchaseEvent } from '../types/purchaseHistory';
 
@@ -34,8 +35,11 @@ export function useReferralData(): UseReferralDataReturn {
       const response = await apiService.getAdminReferralCodes();
 
       if (response.success && response.data) {
-        // Transform backend data to frontend format
-        let transformedCodes = transformReferralCodes(response.data);
+        // Get commission rates
+        const commissionRates = getCommissionRates();
+        
+        // Transform backend data to frontend format (with earnings calculation)
+        let transformedCodes = transformReferralCodes(response.data, commissionRates);
 
         // Fetch purchase history for each referral code to get time series data
         // This uses get-referral-details which fetches from SQL PurchaseHistory table

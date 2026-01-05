@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import UserTimeline from './UserTimeline';
+import UserDetailView from './UserDetailView';
+import { getCommissionRates } from '../config/commission';
 
 interface User {
   userId: string;
@@ -22,13 +23,16 @@ export default function UserListModal({
 }: UserListModalProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const commissionRates = getCommissionRates();
+
   if (selectedUser) {
     return (
-      <UserTimeline
+      <UserDetailView
         userId={selectedUser.userId}
         userName={selectedUser.name || undefined}
         userEmail={selectedUser.email || undefined}
         referralCode={referralCode}
+        commissionRates={commissionRates}
         onClose={() => setSelectedUser(null)}
       />
     );

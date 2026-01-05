@@ -5,6 +5,7 @@ import ReferralCodesTable from './ReferralCodesTable';
 import PerformanceCharts from './PerformanceCharts';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
+import { formatCurrency } from '../config/commission';
 
 interface DashboardProps {
   user: User;
@@ -53,16 +54,28 @@ export default function Dashboard({
               icon="✅"
             />
             <StatsCard
+              title="Total Earnings"
+              value={formatCurrency(stats.totalEarnings.total, stats.totalEarnings.currency)}
+              subtitle={`${formatCurrency(stats.totalEarnings.fromTrials, stats.totalEarnings.currency)} from trials, ${formatCurrency(stats.totalEarnings.fromPaid, stats.totalEarnings.currency)} from paid`}
+              icon="💰"
+            />
+            <StatsCard
               title="Trial Conversions"
               value={stats.trialConversions.toLocaleString()}
-              subtitle="Trial subscriptions"
+              subtitle={`${formatCurrency(stats.totalEarnings.fromTrials, stats.totalEarnings.currency)} earned`}
               icon="🆓"
             />
             <StatsCard
               title="Paid Conversions"
               value={stats.paidConversions.toLocaleString()}
-              subtitle="Paid subscriptions"
+              subtitle={`${formatCurrency(stats.totalEarnings.fromPaid, stats.totalEarnings.currency)} earned`}
               icon="💳"
+            />
+            <StatsCard
+              title="Avg Earnings/Conversion"
+              value={formatCurrency(stats.averageEarningsPerConversion, stats.totalEarnings.currency)}
+              subtitle="Average per conversion"
+              icon="📊"
             />
           </div>
 

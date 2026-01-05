@@ -1,10 +1,15 @@
 import type { ReferralCode, DashboardStats, TimeSeriesData } from '../types';
 import type { BackendReferral } from '../types/backend';
+import type { CommissionRate } from '../types/commission';
+import { calculateEarnings, calculateTotalEarnings, calculateAverageEarningsPerConversion } from './earnings';
 
 /**
  * Transform backend referral data to frontend format
  */
-export function transformReferralCode(backendRef: BackendReferral): ReferralCode {
+export function transformReferralCode(
+  backendRef: BackendReferral,
+  commissionRates?: CommissionRate
+): ReferralCode {
   const now = new Date();
   const endDate = backendRef.endDate ? new Date(backendRef.endDate) : null;
   const startDate = backendRef.startDate ? new Date(backendRef.startDate) : null;
@@ -22,6 +27,11 @@ export function transformReferralCode(backendRef: BackendReferral): ReferralCode
   const paidConversions = backendRef.purchaseNumbers?.paid || 0;
   const conversions = trialConversions + paidConversions;
 
+  // Calculate earnings if commission rates provided
+  const earnings = commissionRates
+    ? calculateEarnings(trialConversions, paidConversions, commissionRates)
+    : undefined;
+
   return {
     id: backendRef._id,
     code: backendRef.referralCode,
@@ -30,6 +40,7 @@ export function transformReferralCode(backendRef: BackendReferral): ReferralCode
     status,
     trialConversions,
     paidConversions,
+    earnings,
   };
 }
 
@@ -37,9 +48,10 @@ export function transformReferralCode(backendRef: BackendReferral): ReferralCode
  * Transform array of backend referrals to frontend format
  */
 export function transformReferralCodes(
-  backendRefs: BackendReferral[]
+  backendRefs: BackendReferral[],
+  commissionRates?: CommissionRate
 ): ReferralCode[] {
-  return backendRefs.map(transformReferralCode);
+  return backendRefs.map((ref) => transformReferralCode(ref, commissionRates));
 }
 
 /**
@@ -61,11 +73,37 @@ export function calculateDashboardStats(
     0
   );
 
+  // Calculate total earnings
+  const totalEarnings = referralCodes.reduce(
+    (acc, code) => {
+      if (code.earnings) {
+        acc.fromTrials += code.earnings.fromTrials;
+        acc.fromPaid += code.earnings.fromPaid;
+        acc.total += code.earnings.total;
+        acc.currency = code.earnings.currency; // Use currency from first code
+      }
+      return acc;
+    },
+    { fromTrials: 0, fromPaid: 0, total: 0, currency: 'USD' }
+  );
+
+  const averageEarningsPerConversion = calculateAverageEarningsPerConversion(
+    totalEarnings.total,
+    totalConversions
+  );
+
   return {
     totalReferralCodes: referralCodes.length,
     totalConversions,
     trialConversions,
     paidConversions,
+    totalEarnings: {
+      fromTrials: Number(totalEarnings.fromTrials.toFixed(2)),
+      fromPaid: Number(totalEarnings.fromPaid.toFixed(2)),
+      total: Number(totalEarnings.total.toFixed(2)),
+      currency: totalEarnings.currency,
+    },
+    averageEarningsPerConversion,
   };
 }
 

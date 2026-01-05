@@ -6,6 +6,8 @@ export interface User {
   avatar?: string;
 }
 
+import type { EarningsBreakdown } from './commission';
+
 export interface ReferralCode {
   id: string;
   code: string;
@@ -14,6 +16,7 @@ export interface ReferralCode {
   status: 'active' | 'inactive';
   trialConversions?: number;
   paidConversions?: number;
+  earnings?: EarningsBreakdown; // Calculated earnings for this code
 }
 
 export interface ReferralEvent {
@@ -26,11 +29,15 @@ export interface ReferralEvent {
   revenue?: number;
 }
 
+import type { EarningsBreakdown } from './commission';
+
 export interface DashboardStats {
   totalReferralCodes: number;
   totalConversions: number; // total trial + paid
   trialConversions: number;
   paidConversions: number;
+  totalEarnings: EarningsBreakdown; // Total income
+  averageEarningsPerConversion: number;
 }
 
 export interface TimeSeriesData {
