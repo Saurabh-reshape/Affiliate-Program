@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
-import { useFilters } from '../hooks/useFilters';
-import { formatCurrency } from '../config/commission';
-import { formatDateTime } from '../utils/dateUtils';
-import type { CommissionRate } from '../types/commission';
-import type { PurchaseEvent } from '../types/purchaseHistory';
-import LoadingSpinner from './LoadingSpinner';
-import ErrorMessage from './ErrorMessage';
+import { useState, useEffect, useMemo } from "react";
+import { apiService } from "../services/api";
+import { useFilters } from "../hooks/useFilters";
+import { formatCurrency } from "../config/commission";
+import { formatDateTime } from "../utils/dateUtils";
+import type { CommissionRate } from "../types/commission";
+import type { PurchaseEvent } from "../types/purchaseHistory";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorMessage from "./ErrorMessage";
+import PerformanceCharts from "./PerformanceCharts";
+import {
+  generateTimeSeriesWithDateRange,
+  getEarliestEventDate,
+} from "../utils/timeSeries";
 
 interface UserDetailViewProps {
   userId: string;
@@ -28,7 +33,7 @@ export default function UserDetailView({
   const [events, setEvents] = useState<PurchaseEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
+  const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
 
   const {
     filteredItems: filteredEvents,
@@ -43,8 +48,8 @@ export default function UserDetailView({
     clearFilters,
     hasActiveFilters,
   } = useFilters<PurchaseEvent>(events, {
-    searchKeys: ['product_id', 'transaction_id', 'country_code'],
-    dateKey: 'purchased_at_ms',
+    searchKeys: ["product_id", "transaction_id", "country_code"],
+    dateKey: "purchased_at_ms",
   });
 
   useEffect(() => {
@@ -61,18 +66,18 @@ export default function UserDetailView({
 
           if (userData && userData.events) {
             const purchaseEvents = userData.events.filter(
-              (e: any) => e && typeof e === 'object'
+              (e: any) => e && typeof e === "object"
             ) as PurchaseEvent[];
             setEvents(purchaseEvents);
           } else {
             setEvents([]);
           }
         } else {
-          setError('Failed to fetch user data');
+          setError("Failed to fetch user data");
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching user timeline:', err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching user timeline:", err);
       } finally {
         setLoading(false);
       }
@@ -82,25 +87,28 @@ export default function UserDetailView({
   }, [userId, referralCode]);
 
   // Apply event type filter
-  const finalFilteredEvents = eventTypeFilter === 'all'
-    ? filteredEvents
-    : filteredEvents.filter((e) => e.type === eventTypeFilter);
+  const finalFilteredEvents =
+    eventTypeFilter === "all"
+      ? filteredEvents
+      : filteredEvents.filter((e) => e.type === eventTypeFilter);
 
   const getSortIcon = (key: keyof PurchaseEvent) => {
-    if (sortConfig?.key !== key) return '⇅';
-    return sortConfig.direction === 'asc' ? '↑' : '↓';
+    if (sortConfig?.key !== key) return "⇅";
+    return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
   const getEventTypeLabel = (event: PurchaseEvent) => {
     switch (event.type) {
-      case 'INITIAL_PURCHASE':
-        return event.period_type === 'TRIAL' ? 'Trial Started' : 'Paid Subscription';
-      case 'RENEWAL':
-        return 'Subscription Renewed';
-      case 'CANCELLATION':
-        return 'Subscription Cancelled';
-      case 'SUBSCRIPTION_PAUSED':
-        return 'Subscription Paused';
+      case "INITIAL_PURCHASE":
+        return event.period_type === "TRIAL"
+          ? "Trial Started"
+          : "Paid Subscription";
+      case "RENEWAL":
+        return "Subscription Renewed";
+      case "CANCELLATION":
+        return "Subscription Cancelled";
+      case "SUBSCRIPTION_PAUSED":
+        return "Subscription Paused";
       default:
         return event.type;
     }
@@ -108,26 +116,26 @@ export default function UserDetailView({
 
   const getEventIcon = (event: PurchaseEvent) => {
     switch (event.type) {
-      case 'INITIAL_PURCHASE':
-        return event.period_type === 'TRIAL' ? '🆓' : '💳';
-      case 'RENEWAL':
-        return '🔄';
-      case 'CANCELLATION':
-        return '❌';
-      case 'SUBSCRIPTION_PAUSED':
-        return '⏸️';
+      case "INITIAL_PURCHASE":
+        return event.period_type === "TRIAL" ? "🆓" : "💳";
+      case "RENEWAL":
+        return "🔄";
+      case "CANCELLATION":
+        return "❌";
+      case "SUBSCRIPTION_PAUSED":
+        return "⏸️";
       default:
-        return '📅';
+        return "📅";
     }
   };
 
   // Calculate user earnings
   const userEarnings = events.reduce(
     (acc, event) => {
-      if (event.type === 'INITIAL_PURCHASE') {
-        if (event.period_type === 'TRIAL') {
+      if (event.type === "INITIAL_PURCHASE") {
+        if (event.period_type === "TRIAL") {
           acc.fromTrials += commissionRates.perTrialConversion;
-        } else if (event.period_type === 'NORMAL') {
+        } else if (event.period_type === "NORMAL") {
           acc.fromPaid += commissionRates.perPaidConversion;
         }
       }
@@ -136,6 +144,24 @@ export default function UserDetailView({
     { fromTrials: 0, fromPaid: 0 }
   );
   const totalEarnings = userEarnings.fromTrials + userEarnings.fromPaid;
+
+  // Generate time series data for this user
+  const timeSeriesData = useMemo(() => {
+    const initialPurchases = events.filter(
+      (e) => e.type === "INITIAL_PURCHASE"
+    );
+    const earliestDate = getEarliestEventDate(initialPurchases);
+
+    if (!earliestDate) {
+      return [];
+    }
+
+    return generateTimeSeriesWithDateRange(
+      initialPurchases,
+      earliestDate,
+      new Date()
+    );
+  }, [events]);
 
   if (loading) {
     return (
@@ -151,7 +177,10 @@ export default function UserDetailView({
     return (
       <div className="detail-view-overlay" onClick={onClose}>
         <div className="detail-view-modal" onClick={(e) => e.stopPropagation()}>
-          <ErrorMessage message={error} onRetry={() => window.location.reload()} />
+          <ErrorMessage
+            message={error}
+            onRetry={() => window.location.reload()}
+          />
         </div>
       </div>
     );
@@ -164,24 +193,58 @@ export default function UserDetailView({
           <div>
             <h2>User Timeline</h2>
             <div className="user-timeline-user-info">
-              <p><strong>Name:</strong> {userName || 'N/A'}</p>
-              <p><strong>Email:</strong> {userEmail || 'N/A'}</p>
-              <p><strong>User ID:</strong> {userId}</p>
-              <p><strong>Referral Code:</strong> {referralCode}</p>
+              <p>
+                <strong>Name:</strong> {userName || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong> {userEmail || "N/A"}
+              </p>
+              <p>
+                <strong>User ID:</strong> {userId}
+              </p>
+              <p>
+                <strong>Referral Code:</strong> {referralCode}
+              </p>
               <p className="earnings-info">
-                <strong>Earnings Generated:</strong>{' '}
+                <strong>Earnings Generated:</strong>{" "}
                 <span className="earnings-value">
                   {formatCurrency(totalEarnings, commissionRates.currency)}
-                </span>
-                {' '}({formatCurrency(userEarnings.fromTrials, commissionRates.currency)} from trials,{' '}
-                {formatCurrency(userEarnings.fromPaid, commissionRates.currency)} from paid)
+                </span>{" "}
+                (
+                {formatCurrency(
+                  userEarnings.fromTrials,
+                  commissionRates.currency
+                )}{" "}
+                from trials,{" "}
+                {formatCurrency(
+                  userEarnings.fromPaid,
+                  commissionRates.currency
+                )}{" "}
+                from paid)
               </p>
             </div>
           </div>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className="detail-view-content">
+          {/* Time series chart for user's earnings */}
+          {timeSeriesData.length > 0 && (
+            <div className="detail-chart-section">
+              <PerformanceCharts
+                timeSeriesData={timeSeriesData}
+                title={`Earnings Timeline for ${userName || userId}`}
+                defaultStartDate={
+                  getEarliestEventDate(
+                    events.filter((e) => e.type === "INITIAL_PURCHASE")
+                  ) || undefined
+                }
+              />
+            </div>
+          )}
+
           {/* Filters */}
           <div className="timeline-filters">
             <div className="filter-group">
@@ -212,7 +275,7 @@ export default function UserDetailView({
               <label>From:</label>
               <input
                 type="date"
-                value={startDate || ''}
+                value={startDate || ""}
                 onChange={(e) => setStartDate(e.target.value || null)}
                 className="date-input"
               />
@@ -221,7 +284,7 @@ export default function UserDetailView({
               <label>To:</label>
               <input
                 type="date"
-                value={endDate || ''}
+                value={endDate || ""}
                 onChange={(e) => setEndDate(e.target.value || null)}
                 className="date-input"
               />
@@ -229,10 +292,10 @@ export default function UserDetailView({
             <div className="filter-group">
               <label>Sort:</label>
               <button
-                onClick={() => handleSort('purchased_at_ms')}
+                onClick={() => handleSort("purchased_at_ms")}
                 className="sort-button"
               >
-                Date {getSortIcon('purchased_at_ms')}
+                Date {getSortIcon("purchased_at_ms")}
               </button>
             </div>
             {hasActiveFilters && (
@@ -256,7 +319,9 @@ export default function UserDetailView({
                     className="timeline-item"
                   >
                     <div className="timeline-marker">
-                      <span className="timeline-icon">{getEventIcon(event)}</span>
+                      <span className="timeline-icon">
+                        {getEventIcon(event)}
+                      </span>
                     </div>
                     <div className="timeline-content">
                       <div className="timeline-header">
@@ -266,30 +331,38 @@ export default function UserDetailView({
                         </span>
                       </div>
                       <div className="timeline-details">
-                        {event.type === 'INITIAL_PURCHASE' && (
+                        {event.type === "INITIAL_PURCHASE" && (
                           <>
-                            <p><strong>Product:</strong> {event.product_id}</p>
-                            <p><strong>Type:</strong> {event.period_type}</p>
+                            <p>
+                              <strong>Product:</strong> {event.product_id}
+                            </p>
+                            <p>
+                              <strong>Type:</strong> {event.period_type}
+                            </p>
                             {event.price !== undefined && event.price > 0 && (
                               <p>
-                                <strong>Price:</strong>{' '}
+                                <strong>Price:</strong>{" "}
                                 {formatCurrency(event.price, event.currency)}
                               </p>
                             )}
-                            <p><strong>Store:</strong> {event.store}</p>
-                            <p><strong>Country:</strong> {event.country_code}</p>
-                            {event.period_type === 'TRIAL' && (
+                            <p>
+                              <strong>Store:</strong> {event.store}
+                            </p>
+                            <p>
+                              <strong>Country:</strong> {event.country_code}
+                            </p>
+                            {event.period_type === "TRIAL" && (
                               <p className="earnings-note">
-                                <strong>Earnings:</strong>{' '}
+                                <strong>Earnings:</strong>{" "}
                                 {formatCurrency(
                                   commissionRates.perTrialConversion,
                                   commissionRates.currency
                                 )}
                               </p>
                             )}
-                            {event.period_type === 'NORMAL' && (
+                            {event.period_type === "NORMAL" && (
                               <p className="earnings-note">
-                                <strong>Earnings:</strong>{' '}
+                                <strong>Earnings:</strong>{" "}
                                 {formatCurrency(
                                   commissionRates.perPaidConversion,
                                   commissionRates.currency
@@ -298,12 +371,14 @@ export default function UserDetailView({
                             )}
                           </>
                         )}
-                        {event.type === 'RENEWAL' && (
+                        {event.type === "RENEWAL" && (
                           <>
-                            <p><strong>Product:</strong> {event.product_id}</p>
+                            <p>
+                              <strong>Product:</strong> {event.product_id}
+                            </p>
                             {event.price !== undefined && (
                               <p>
-                                <strong>Price:</strong>{' '}
+                                <strong>Price:</strong>{" "}
                                 {formatCurrency(event.price, event.currency)}
                               </p>
                             )}
@@ -311,7 +386,7 @@ export default function UserDetailView({
                         )}
                         {event.transaction_id && (
                           <p>
-                            <strong>Transaction ID:</strong>{' '}
+                            <strong>Transaction ID:</strong>{" "}
                             <code>{event.transaction_id}</code>
                           </p>
                         )}
@@ -327,4 +402,3 @@ export default function UserDetailView({
     </div>
   );
 }
-

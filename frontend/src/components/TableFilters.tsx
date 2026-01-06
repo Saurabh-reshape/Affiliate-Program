@@ -35,6 +35,7 @@ export default function TableFilters({
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
+          <option value="exhausted">Exhausted</option>
         </select>
       </div>
       {hasActiveFilters && (
@@ -45,4 +46,3 @@ export default function TableFilters({
     </div>
   );
 }
-

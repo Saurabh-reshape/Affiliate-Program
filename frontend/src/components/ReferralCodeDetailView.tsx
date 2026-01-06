@@ -1,17 +1,16 @@
-import { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
-import { useFilters } from '../hooks/useFilters';
-import { formatCurrency } from '../config/commission';
-import { formatDate } from '../utils/dateUtils';
-import type { ReferralCode } from '../types';
-import type { CommissionRate } from '../types/commission';
-import UserDetailView from './UserDetailView';
-import PerformanceCharts from './PerformanceCharts';
-import LoadingSpinner from './LoadingSpinner';
-import ErrorMessage from './ErrorMessage';
-import { generateTimeSeriesWithFilledDates } from '../utils/timeSeries';
-import type { PurchaseEvent } from '../types/purchaseHistory';
-import type { TimeSeriesData } from '../types';
+import { useState, useEffect } from "react";
+import { apiService } from "../services/api";
+import { useFilters } from "../hooks/useFilters";
+import { formatCurrency } from "../config/commission";
+import type { ReferralCode } from "../types";
+import type { CommissionRate } from "../types/commission";
+import UserDetailView from "./UserDetailView";
+import PerformanceCharts from "./PerformanceCharts";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorMessage from "./ErrorMessage";
+import { generateTimeSeriesWithDateRange } from "../utils/timeSeries";
+import type { PurchaseEvent } from "../types/purchaseHistory";
+import type { TimeSeriesData } from "../types";
 
 interface ReferralCodeDetailViewProps {
   referralCode: ReferralCode;
@@ -47,7 +46,7 @@ export default function ReferralCodeDetailView({
     clearFilters,
     hasActiveFilters,
   } = useFilters<User>(users, {
-    searchKeys: ['name', 'email', 'userId'],
+    searchKeys: ["name", "email", "userId"],
   });
 
   useEffect(() => {
@@ -60,25 +59,36 @@ export default function ReferralCodeDetailView({
         if (response.success && response.data) {
           setUsers(response.data);
 
-          // Generate time series data for this code
+          // Generate time series data for this code from code creation date to now
           const allEvents: PurchaseEvent[] = [];
           response.data.forEach((user: User) => {
             if (user.events && Array.isArray(user.events)) {
               user.events.forEach((event: any) => {
-                if (event && event.type === 'INITIAL_PURCHASE' && event.purchased_at_ms) {
+                if (
+                  event &&
+                  event.type === "INITIAL_PURCHASE" &&
+                  event.purchased_at_ms
+                ) {
                   allEvents.push(event as PurchaseEvent);
                 }
               });
             }
           });
-          const timeSeries = generateTimeSeriesWithFilledDates(allEvents, 30);
+
+          // Use code creation date as start date, current date as end date
+          const startDate = referralCode.createdAt.split("T")[0];
+          const timeSeries = generateTimeSeriesWithDateRange(
+            allEvents,
+            startDate,
+            new Date()
+          );
           setTimeSeriesData(timeSeries);
         } else {
-          setError('Failed to fetch referral code details');
+          setError("Failed to fetch referral code details");
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching referral code details:', err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching referral code details:", err);
       } finally {
         setLoading(false);
       }
@@ -88,8 +98,8 @@ export default function ReferralCodeDetailView({
   }, [referralCode.code]);
 
   const getSortIcon = (key: keyof User) => {
-    if (sortConfig?.key !== key) return '⇅';
-    return sortConfig.direction === 'asc' ? '↑' : '↓';
+    if (sortConfig?.key !== key) return "⇅";
+    return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
   if (selectedUser) {
@@ -119,7 +129,10 @@ export default function ReferralCodeDetailView({
     return (
       <div className="detail-view-overlay" onClick={onClose}>
         <div className="detail-view-modal" onClick={(e) => e.stopPropagation()}>
-          <ErrorMessage message={error} onRetry={() => window.location.reload()} />
+          <ErrorMessage
+            message={error}
+            onRetry={() => window.location.reload()}
+          />
         </div>
       </div>
     );
@@ -145,11 +158,15 @@ export default function ReferralCodeDetailView({
               </div>
               <div className="stat-item">
                 <span className="stat-label">Trial:</span>
-                <span className="stat-value">{referralCode.trialConversions || 0}</span>
+                <span className="stat-value">
+                  {referralCode.trialConversions || 0}
+                </span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Paid:</span>
-                <span className="stat-value">{referralCode.paidConversions || 0}</span>
+                <span className="stat-value">
+                  {referralCode.paidConversions || 0}
+                </span>
               </div>
               <div className="stat-item earnings-stat">
                 <span className="stat-label">Total Earnings:</span>
@@ -159,19 +176,27 @@ export default function ReferralCodeDetailView({
               </div>
             </div>
           </div>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className="detail-view-content">
           {/* Chart for this code */}
           <div className="detail-chart-section">
-            <PerformanceCharts timeSeriesData={timeSeriesData} />
+            <PerformanceCharts
+              timeSeriesData={timeSeriesData}
+              title={`Performance for ${referralCode.code}`}
+              defaultStartDate={referralCode.createdAt.split("T")[0]}
+            />
           </div>
 
           {/* Users Section */}
           <div className="detail-users-section">
             <div className="section-header">
-              <h3>Users ({filteredUsers.length} of {users.length})</h3>
+              <h3>
+                Users ({filteredUsers.length} of {users.length})
+              </h3>
               <div className="filter-controls">
                 <input
                   type="text"
@@ -181,7 +206,10 @@ export default function ReferralCodeDetailView({
                   className="search-input"
                 />
                 {hasActiveFilters && (
-                  <button onClick={clearFilters} className="clear-filters-button">
+                  <button
+                    onClick={clearFilters}
+                    className="clear-filters-button"
+                  >
                     Clear Filters
                   </button>
                 )}
@@ -192,14 +220,20 @@ export default function ReferralCodeDetailView({
               <table className="users-table">
                 <thead>
                   <tr>
-                    <th onClick={() => handleSort('name')} className="sortable">
-                      Name {getSortIcon('name')}
+                    <th onClick={() => handleSort("name")} className="sortable">
+                      Name {getSortIcon("name")}
                     </th>
-                    <th onClick={() => handleSort('email')} className="sortable">
-                      Email {getSortIcon('email')}
+                    <th
+                      onClick={() => handleSort("email")}
+                      className="sortable"
+                    >
+                      Email {getSortIcon("email")}
                     </th>
-                    <th onClick={() => handleSort('userId')} className="sortable">
-                      User ID {getSortIcon('userId')}
+                    <th
+                      onClick={() => handleSort("userId")}
+                      className="sortable"
+                    >
+                      User ID {getSortIcon("userId")}
                     </th>
                     <th>Events</th>
                     <th>Actions</th>
@@ -215,9 +249,11 @@ export default function ReferralCodeDetailView({
                   ) : (
                     filteredUsers.map((user) => (
                       <tr key={user.userId}>
-                        <td>{user.name || 'N/A'}</td>
-                        <td>{user.email || 'N/A'}</td>
-                        <td><code className="user-id-code">{user.userId}</code></td>
+                        <td>{user.name || "N/A"}</td>
+                        <td>{user.email || "N/A"}</td>
+                        <td>
+                          <code className="user-id-code">{user.userId}</code>
+                        </td>
                         <td>{user.events?.length || 0}</td>
                         <td>
                           <button
@@ -239,4 +275,3 @@ export default function ReferralCodeDetailView({
     </div>
   );
 }
-

@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
-import { transformReferralCodes, calculateDashboardStats } from '../utils/transformers';
-import { generateTimeSeriesWithFilledDates } from '../utils/timeSeries';
-import { getCommissionRates } from '../config/commission';
-import type { ReferralCode, DashboardStats, TimeSeriesData } from '../types';
-import type { PurchaseEvent } from '../types/purchaseHistory';
+import { useState, useEffect } from "react";
+import { apiService } from "../services/api";
+import {
+  transformReferralCodes,
+  calculateDashboardStats,
+  createEmptyDashboardStats,
+} from "../utils/transformers";
+import {
+  generateTimeSeriesWithDateRange,
+  getEarliestEventDate,
+} from "../utils/timeSeries";
+import { getCommissionRates } from "../config/commission";
+import type { ReferralCode, DashboardStats, TimeSeriesData } from "../types";
+import type { PurchaseEvent } from "../types/purchaseHistory";
 
 interface UseReferralDataReturn {
   referralCodes: ReferralCode[];
@@ -16,13 +23,11 @@ interface UseReferralDataReturn {
 }
 
 export function useReferralData(): UseReferralDataReturn {
+  const commissionRates = getCommissionRates();
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
-      const [stats, setStats] = useState<DashboardStats>({
-    totalReferralCodes: 0,
-    totalConversions: 0,
-    trialConversions: 0,
-    paidConversions: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats>(() =>
+    createEmptyDashboardStats(commissionRates.currency)
+  );
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,22 +40,24 @@ export function useReferralData(): UseReferralDataReturn {
       const response = await apiService.getAdminReferralCodes();
 
       if (response.success && response.data) {
-        // Get commission rates
-        const commissionRates = getCommissionRates();
-        
         // Transform backend data to frontend format (with earnings calculation)
-        let transformedCodes = transformReferralCodes(response.data, commissionRates);
+        let transformedCodes = transformReferralCodes(
+          response.data,
+          commissionRates
+        );
 
         // Fetch purchase history for each referral code to get time series data
         // This uses get-referral-details which fetches from SQL PurchaseHistory table
         const allPurchaseEvents: PurchaseEvent[] = [];
-        
+
         await Promise.all(
           transformedCodes.map(async (code) => {
             try {
               // get-referral-details fetches purchase history from SQL database
               // It returns user data with events array (already normalized by backend)
-              const detailsResponse = await apiService.getReferralDetails(code.code);
+              const detailsResponse = await apiService.getReferralDetails(
+                code.code
+              );
               if (detailsResponse.success && detailsResponse.data) {
                 // Process each user's purchase history
                 detailsResponse.data.forEach((userData: any) => {
@@ -59,7 +66,7 @@ export function useReferralData(): UseReferralDataReturn {
                     userData.events.forEach((event: any) => {
                       // Events are already normalized by backend from SQL JSON field
                       // Just verify it's an INITIAL_PURCHASE event
-                      if (event && event.type === 'INITIAL_PURCHASE') {
+                      if (event && event.type === "INITIAL_PURCHASE") {
                         // Validate event structure matches PurchaseEvent
                         if (event.purchased_at_ms && event.period_type) {
                           allPurchaseEvents.push(event as PurchaseEvent);
@@ -70,7 +77,10 @@ export function useReferralData(): UseReferralDataReturn {
                 });
               }
             } catch (err) {
-              console.warn(`Failed to fetch purchase history for code ${code.code}:`, err);
+              console.warn(
+                `Failed to fetch purchase history for code ${code.code}:`,
+                err
+              );
             }
           })
         );
@@ -82,16 +92,27 @@ export function useReferralData(): UseReferralDataReturn {
         setStats(calculatedStats);
 
         // Generate time series data from actual purchase events
-        const timeSeries = generateTimeSeriesWithFilledDates(allPurchaseEvents, 30);
+        const earliestEventDate = getEarliestEventDate(allPurchaseEvents);
+        const fallbackStart = new Date();
+        fallbackStart.setDate(fallbackStart.getDate() - 29);
+        const startDateForSeries =
+          earliestEventDate || fallbackStart.toISOString().split("T")[0];
+
+        const timeSeries = generateTimeSeriesWithDateRange(
+          allPurchaseEvents,
+          startDateForSeries,
+          new Date()
+        );
         setTimeSeriesData(timeSeries);
       } else {
-        setError(response.message || 'Failed to fetch referral codes');
+        setError(response.message || "Failed to fetch referral codes");
         setReferralCodes([]);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
       setError(errorMessage);
-      console.error('Error fetching referral data:', err);
+      console.error("Error fetching referral data:", err);
       setReferralCodes([]);
     } finally {
       setLoading(false);
@@ -111,4 +132,3 @@ export function useReferralData(): UseReferralDataReturn {
     refetch: fetchData,
   };
 }
-

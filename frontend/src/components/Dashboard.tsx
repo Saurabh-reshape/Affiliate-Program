@@ -1,11 +1,17 @@
-import type { User, ReferralCode, DashboardStats, TimeSeriesData } from '../types';
-import Header from './Header';
-import StatsCard from './StatsCard';
-import ReferralCodesTable from './ReferralCodesTable';
-import PerformanceCharts from './PerformanceCharts';
-import LoadingSpinner from './LoadingSpinner';
-import ErrorMessage from './ErrorMessage';
-import { formatCurrency } from '../config/commission';
+import type {
+  User,
+  ReferralCode,
+  DashboardStats,
+  TimeSeriesData,
+} from "../types";
+import Header from "./Header";
+import StatsCard from "./StatsCard";
+import ReferralCodesTable from "./ReferralCodesTable";
+import PerformanceCharts from "./PerformanceCharts";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorMessage from "./ErrorMessage";
+import { formatCurrency } from "../config/commission";
+import { getEarliestStartDate } from "../utils/transformers";
 
 interface DashboardProps {
   user: User;
@@ -17,15 +23,20 @@ interface DashboardProps {
   onRetry?: () => void;
 }
 
-export default function Dashboard({ 
-  user, 
-  referralCodes, 
-  stats, 
+export default function Dashboard({
+  user,
+  referralCodes,
+  stats,
   timeSeriesData,
   loading = false,
   error = null,
-  onRetry
+  onRetry,
 }: DashboardProps) {
+  const earliestStartDate = getEarliestStartDate(referralCodes);
+  const defaultChartStart =
+    earliestStartDate ||
+    (user.createdAt ? user.createdAt.split("T")[0] : undefined);
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -44,43 +55,38 @@ export default function Dashboard({
             <StatsCard
               title="Total Referral Codes"
               value={stats.totalReferralCodes}
-              subtitle="Active codes"
-              icon="🔗"
+              subtitle={`${stats.inactiveReferralCodes} inactive · ${stats.activeReferralCodes} active · ${stats.exhaustedReferralCodes} exhausted`}
+              icon="📋"
             />
+
             <StatsCard
               title="Total Conversions"
               value={stats.totalConversions.toLocaleString()}
-              subtitle="All conversions"
+              subtitle={`${stats.trialConversions.toLocaleString()} trial · ${stats.paidConversions.toLocaleString()} paid · ${stats.totalReferrals.toLocaleString()} referrals`}
               icon="✅"
             />
             <StatsCard
               title="Total Earnings"
-              value={formatCurrency(stats.totalEarnings.total, stats.totalEarnings.currency)}
-              subtitle={`${formatCurrency(stats.totalEarnings.fromTrials, stats.totalEarnings.currency)} from trials, ${formatCurrency(stats.totalEarnings.fromPaid, stats.totalEarnings.currency)} from paid`}
+              value={formatCurrency(
+                stats.totalEarnings.total,
+                stats.totalEarnings.currency
+              )}
+              subtitle={`${formatCurrency(
+                stats.totalEarnings.fromPaid,
+                stats.totalEarnings.currency
+              )} from paid · ${formatCurrency(
+                stats.totalEarnings.fromTrials,
+                stats.totalEarnings.currency
+              )} from free trials`}
               icon="💰"
-            />
-            <StatsCard
-              title="Trial Conversions"
-              value={stats.trialConversions.toLocaleString()}
-              subtitle={`${formatCurrency(stats.totalEarnings.fromTrials, stats.totalEarnings.currency)} earned`}
-              icon="🆓"
-            />
-            <StatsCard
-              title="Paid Conversions"
-              value={stats.paidConversions.toLocaleString()}
-              subtitle={`${formatCurrency(stats.totalEarnings.fromPaid, stats.totalEarnings.currency)} earned`}
-              icon="💳"
-            />
-            <StatsCard
-              title="Avg Earnings/Conversion"
-              value={formatCurrency(stats.averageEarningsPerConversion, stats.totalEarnings.currency)}
-              subtitle="Average per conversion"
-              icon="📊"
             />
           </div>
 
           {/* Charts */}
-          <PerformanceCharts timeSeriesData={timeSeriesData} />
+          <PerformanceCharts
+            timeSeriesData={timeSeriesData}
+            defaultStartDate={defaultChartStart}
+          />
 
           {/* Referral Codes Table */}
           <ReferralCodesTable codes={referralCodes} />
@@ -89,4 +95,3 @@ export default function Dashboard({
     </div>
   );
 }
-

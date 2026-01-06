@@ -4,6 +4,10 @@ interface DateRangeSelectorProps {
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   onReset: () => void;
+  resetStartDate?: string;
+  resetEndDate?: string;
+  resetLabel?: string;
+  showResetButton?: boolean;
 }
 
 export default function DateRangeSelector({
@@ -12,20 +16,27 @@ export default function DateRangeSelector({
   onStartDateChange,
   onEndDateChange,
   onReset,
+  resetStartDate,
+  resetEndDate,
+  resetLabel = "Reset to 30 Days",
+  showResetButton = true,
 }: DateRangeSelectorProps) {
-  // Get default dates (last 30 days)
-  const getDefaultStartDate = () => {
+  // Default reset range is last 30 days
+  const getResetStartDate = () => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
-  const getDefaultEndDate = () => {
-    return new Date().toISOString().split('T')[0];
+  const getResetEndDate = () => {
+    return new Date().toISOString().split("T")[0];
   };
 
-  const isDefaultRange = 
-    startDate === getDefaultStartDate() && endDate === getDefaultEndDate();
+  const effectiveResetStart = resetStartDate ?? getResetStartDate();
+  const effectiveResetEnd = resetEndDate ?? getResetEndDate();
+
+  const isDefaultRange =
+    startDate === effectiveResetStart && endDate === effectiveResetEnd;
 
   return (
     <div className="date-range-selector">
@@ -49,17 +60,16 @@ export default function DateRangeSelector({
             value={endDate}
             onChange={(e) => onEndDateChange(e.target.value)}
             min={startDate}
-            max={getDefaultEndDate()}
+            max={getResetEndDate()}
             className="date-input"
           />
         </div>
-        {!isDefaultRange && (
+        {!isDefaultRange && showResetButton && (
           <button onClick={onReset} className="reset-date-button">
-            Reset to 30 Days
+            {resetLabel}
           </button>
         )}
       </div>
     </div>
   );
 }
-

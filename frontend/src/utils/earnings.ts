@@ -1,4 +1,4 @@
-import type { CommissionRate, EarningsBreakdown } from '../types/commission';
+import type { CommissionRate, EarningsBreakdown } from "../types/commission";
 
 /**
  * Calculate earnings for a referral code
@@ -42,14 +42,13 @@ export function calculateTotalEarnings(
   return calculateEarnings(totals.trial, totals.paid, rates);
 }
 
-/**
- * Calculate average earnings per conversion
- */
-export function calculateAverageEarningsPerConversion(
-  totalEarnings: number,
-  totalConversions: number
-): number {
-  if (totalConversions === 0) return 0;
-  return Number((totalEarnings / totalConversions).toFixed(2));
-}
-
+// /**
+//  * Calculate average earnings per conversion
+//  */
+// export function calculateAverageEarningsPerConversion(
+//   totalEarnings: number,
+//   totalConversions: number
+// ): number {
+//   if (totalConversions === 0) return 0;
+//   return Number((totalEarnings / totalConversions).toFixed(2));
+// }
