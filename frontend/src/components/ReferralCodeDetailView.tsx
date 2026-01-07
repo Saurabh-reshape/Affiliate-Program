@@ -165,6 +165,12 @@ export default function ReferralCodeDetailView({
                 <span className="stat-value">{referralCode.conversions}</span>
               </div>
               <div className="stat-item">
+                <span className="stat-label">Signups:</span>
+                <span className="stat-value">
+                  {referralCode.signupConversions || 0}
+                </span>
+              </div>
+              <div className="stat-item">
                 <span className="stat-label">Trial:</span>
                 <span className="stat-value">
                   {referralCode.trialConversions || 0}
@@ -183,6 +189,27 @@ export default function ReferralCodeDetailView({
                 </span>
               </div>
             </div>
+            {/* Commission Rates */}
+            {referralCode.commissionConfig &&
+              referralCode.commissionConfig.length > 0 && (
+                <div className="commission-rates">
+                  <span className="rates-label">Commission Rates:</span>
+                  <div className="rates-list">
+                    {referralCode.commissionConfig.map((rule, index) => (
+                      <span key={index} className="rate-badge">
+                        {rule.event === "free_trial"
+                          ? "Free Trial"
+                          : rule.event === "purchase"
+                          ? "Purchase"
+                          : rule.event === "signup"
+                          ? "Signup"
+                          : rule.event}
+                        : {formatCurrency(rule.rate, rule.currency)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
           <button className="close-button" onClick={onClose}>
             ×

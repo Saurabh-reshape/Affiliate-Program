@@ -20,6 +20,7 @@ export function createEmptyDashboardStats(
     exhaustedReferralCodes: 0,
     totalConversions: 0,
     totalReferrals: 0,
+    signupConversions: 0,
     trialConversions: 0,
     paidConversions: 0,
     totalEarnings: {
@@ -45,9 +46,11 @@ export function transformReferralCode(
 
   // Use stats from backend
   const referralsCount = backendRef.stats?.totalReferrals ?? 0;
+  const signupConversions = referralsCount; // signups = referrals count
   const trialConversions = backendRef.stats?.free_trial ?? 0;
   const paidConversions = backendRef.stats?.purchase ?? 0;
-  const conversions = trialConversions + paidConversions;
+  // Total conversions = signup + free_trial + paid
+  const conversions = signupConversions + trialConversions + paidConversions;
   const usageCount = Math.max(conversions, referralsCount);
 
   // Determine status based on dates
@@ -86,6 +89,7 @@ export function transformReferralCode(
     commissionConfig: backendRef.commissionConfig || [],
     quota,
     referralsCount,
+    signupConversions,
     startDate: backendRef.startDate || null,
     endDate: backendRef.endDate || null,
     durationDays: backendRef.noOfDays,
@@ -117,6 +121,7 @@ export function calculateDashboardStats(
 
   const totals = referralCodes.reduce((acc, code) => {
     acc.totalConversions += code.conversions || 0;
+    acc.signupConversions += code.signupConversions || 0;
     acc.trialConversions += code.trialConversions || 0;
     acc.paidConversions += code.paidConversions || 0;
     acc.totalReferrals += code.referralsCount || 0;
@@ -150,6 +155,7 @@ export function calculateDashboardStats(
     exhaustedReferralCodes: totals.exhaustedReferralCodes,
     totalConversions: totals.totalConversions,
     totalReferrals: totals.totalReferrals,
+    signupConversions: totals.signupConversions,
     trialConversions: totals.trialConversions,
     paidConversions: totals.paidConversions,
     totalEarnings: {
@@ -180,7 +186,6 @@ export function generateTimeSeriesData(
     data.push({
       date: dateKey,
       signupConversions: 0,
-      conversions: 0,
       trialConversions: 0,
       paidConversions: 0,
     });

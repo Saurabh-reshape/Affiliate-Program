@@ -15,11 +15,12 @@ export interface ReferralCode {
   id: string;
   code: string;
   createdAt: string;
-  conversions: number; // trial + paid conversions
+  conversions: number; // signup + free_trial + paid conversions
   status: ReferralStatus;
   commissionConfig?: CommissionRule[];
   quota?: number | null;
-  referralsCount: number;
+  referralsCount: number; // signups count
+  signupConversions: number; // same as referralsCount, explicit for clarity
   startDate?: string | null;
   endDate?: string | null;
   durationDays?: number;
@@ -43,18 +44,17 @@ export interface DashboardStats {
   activeReferralCodes: number;
   inactiveReferralCodes: number;
   exhaustedReferralCodes: number;
-  totalConversions: number;
-  totalReferrals: number;
+  totalConversions: number; // signup + free_trial + paid conversions
+  totalReferrals: number; // same as signupConversions
+  signupConversions: number;
   trialConversions: number;
   paidConversions: number;
   totalEarnings: EarningsBreakdown; // Total income
-  // averageEarningsPerConversion: number;
 }
 
 export interface TimeSeriesData {
   date: string;
   signupConversions: number;
-  conversions: number;
   trialConversions: number;
   paidConversions: number;
 }

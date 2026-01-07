@@ -62,7 +62,7 @@ export default function Dashboard({
             <StatsCard
               title="Total Conversions"
               value={stats.totalConversions.toLocaleString()}
-              subtitle={`${stats.trialConversions.toLocaleString()} trial · ${stats.paidConversions.toLocaleString()} paid · ${stats.totalReferrals.toLocaleString()} referrals`}
+              subtitle={`${stats.signupConversions.toLocaleString()} signups · ${stats.trialConversions.toLocaleString()} trial · ${stats.paidConversions.toLocaleString()} paid`}
               icon="✅"
             />
             <StatsCard
@@ -75,12 +75,12 @@ export default function Dashboard({
                 stats.totalEarnings.breakdown["signup"] || 0,
                 stats.totalEarnings.currency
               )} from signups · ${formatCurrency(
-                stats.totalEarnings.breakdown["purchase"] || 0,
-                stats.totalEarnings.currency
-              )} from paid · ${formatCurrency(
                 stats.totalEarnings.breakdown["free_trial"] || 0,
                 stats.totalEarnings.currency
-              )} from free trials`}
+              )} from free trials · ${formatCurrency(
+                stats.totalEarnings.breakdown["purchase"] || 0,
+                stats.totalEarnings.currency
+              )} from paid`}
               icon="💰"
             />
           </div>

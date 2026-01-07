@@ -19,6 +19,9 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
   const [usageFilter, setUsageFilter] = useState<"all" | "used" | "unused">(
     "all"
   );
+  const [commissionFilter, setCommissionFilter] = useState<
+    "all" | "with" | "without"
+  >("all");
   const [sortConfig, setSortConfig] = useState<SortConfig<ReferralCode> | null>(
     null
   );
@@ -47,13 +50,31 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
       });
     }
 
+    // Apply commission filter
+    if (commissionFilter !== "all") {
+      result = result.filter((code) => {
+        const hasCommission =
+          code.commissionConfig &&
+          code.commissionConfig.length > 0 &&
+          code.commissionConfig.some((rule) => rule.rate > 0);
+        return commissionFilter === "with" ? hasCommission : !hasCommission;
+      });
+    }
+
     // Apply sorting
     if (sortConfig) {
       result = sortItems(result, sortConfig);
     }
 
     return result;
-  }, [codes, searchTerm, statusFilter, usageFilter, sortConfig]);
+  }, [
+    codes,
+    searchTerm,
+    statusFilter,
+    usageFilter,
+    commissionFilter,
+    sortConfig,
+  ]);
 
   const handleSort = (key: keyof ReferralCode) => {
     setSortConfig((current) => {
@@ -76,6 +97,7 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
     setSearchTerm("");
     setStatusFilter("all");
     setUsageFilter("all");
+    setCommissionFilter("all");
     setSortConfig(null);
   };
 
@@ -83,6 +105,7 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
     searchTerm ||
     statusFilter !== "all" ||
     usageFilter !== "all" ||
+    commissionFilter !== "all" ||
     sortConfig
   );
 
@@ -131,6 +154,8 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
           onStatusFilterChange={setStatusFilter}
           usageFilter={usageFilter}
           onUsageFilterChange={setUsageFilter}
+          commissionFilter={commissionFilter}
+          onCommissionFilterChange={setCommissionFilter}
           onClearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
         />
