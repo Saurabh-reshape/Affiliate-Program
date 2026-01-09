@@ -11,7 +11,7 @@ import HomeView from "./HomeView";
 // import AnalyticsView from "./AnalyticsView";
 import ComingSoon from "./ComingSoon";
 import ErrorMessage from "./ErrorMessage";
-import { getEarliestStartDate } from "../utils/transformers";
+// import { getEarliestStartDate } from "../utils/transformers";
 
 interface DashboardProps {
   user: User;
@@ -29,17 +29,17 @@ export default function Dashboard({
   user,
   referralCodes,
   stats,
-  timeSeriesData,
+  // timeSeriesData,
   loadingCodes = false,
-  loadingHistory = false,
+  // loadingHistory = false,
   error = null,
   onRetry,
   onLogout,
 }: DashboardProps) {
-  const earliestStartDate = getEarliestStartDate(referralCodes);
-  const defaultChartStart =
-    earliestStartDate ||
-    (user.createdAt ? user.createdAt.split("T")[0] : undefined);
+  // const earliestStartDate = getEarliestStartDate(referralCodes);
+  // const defaultChartStart =
+  //   earliestStartDate ||
+  //   (user.createdAt ? user.createdAt.split("T")[0] : undefined);
 
   if (error) {
     return <ErrorMessage message={error} onRetry={onRetry} />;
@@ -67,10 +67,7 @@ export default function Dashboard({
                   />
                 }
               />
-              <Route
-                path="/analytics"
-                element={<ComingSoon />}
-              />
+              <Route path="/analytics" element={<ComingSoon />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

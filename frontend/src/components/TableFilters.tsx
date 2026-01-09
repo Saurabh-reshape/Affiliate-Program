@@ -18,8 +18,8 @@ export default function TableFilters({
   onStatusFilterChange,
   usageFilter,
   onUsageFilterChange,
-  commissionFilter,
-  onCommissionFilterChange,
+  // commissionFilter,
+  // onCommissionFilterChange,
   onClearFilters,
   hasActiveFilters,
 }: TableFiltersProps) {
