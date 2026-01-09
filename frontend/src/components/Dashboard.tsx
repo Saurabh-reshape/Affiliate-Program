@@ -8,7 +8,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import HomeView from "./HomeView";
-import AnalyticsView from "./AnalyticsView";
+// import AnalyticsView from "./AnalyticsView";
+import ComingSoon from "./ComingSoon";
 import ErrorMessage from "./ErrorMessage";
 import { getEarliestStartDate } from "../utils/transformers";
 

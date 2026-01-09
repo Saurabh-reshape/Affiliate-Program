@@ -11,7 +11,8 @@ export default function ComingSoon() {
           <div className="text-6xl mb-4">🚀</div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Coming Soon</h1>
           <p className="text-lg text-gray-600 mb-8">
-            Analytics is under development and will be available soon. We're working hard to bring you powerful insights!
+            Analytics is under development and will be available soon. We're
+            working hard to bring you powerful insights!
           </p>
         </div>
 
