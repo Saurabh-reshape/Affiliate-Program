@@ -8,8 +8,15 @@ import type { User } from "./types";
 
 function AppContent() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
-  const { referralCodes, stats, timeSeriesData, loading, error, refetch } =
-    useReferralData(isAuthenticated);
+  const {
+    referralCodes,
+    stats,
+    timeSeriesData,
+    loadingCodes,
+    loadingHistory,
+    error,
+    refetch,
+  } = useReferralData(isAuthenticated);
 
   // Show loading spinner while checking auth status
   if (authLoading) {
@@ -37,7 +44,8 @@ function AppContent() {
       referralCodes={referralCodes}
       stats={stats}
       timeSeriesData={timeSeriesData}
-      loading={loading}
+      loadingCodes={loadingCodes}
+      loadingHistory={loadingHistory}
       error={error}
       onRetry={refetch}
       onLogout={logout}
@@ -45,11 +53,15 @@ function AppContent() {
   );
 }
 
+import { BrowserRouter } from "react-router-dom";
+
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

@@ -11,13 +11,13 @@ interface PerformanceChartsProps {
 
 export default function PerformanceCharts({
   timeSeriesData,
-  title = "Performance Overview",
+  // title = "Performance Overview",
   defaultStartDate,
   defaultEndDate,
   showDateRangeSelector = true,
 }: PerformanceChartsProps) {
   const chartConfig: TimeSeriesChartConfig = {
-    title: "Signups, Trials & Purchases Over Time",
+    // title: "Signups, Trials & Purchases Over Time",
     defaultStartDate,
     defaultEndDate,
     showDateRangeSelector,
@@ -43,7 +43,7 @@ export default function PerformanceCharts({
 
   return (
     <div className="charts-section">
-      <h2 className="section-title">{title}</h2>
+      {/* <h2 className="section-title">{title}</h2> */}
       <TimeSeriesChart data={timeSeriesData} config={chartConfig} />
     </div>
   );

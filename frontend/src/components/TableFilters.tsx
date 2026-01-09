@@ -61,7 +61,7 @@ export default function TableFilters({
           </select>
         </div>
       )}
-      {commissionFilter && onCommissionFilterChange && (
+      {/* {commissionFilter && onCommissionFilterChange && (
         <div className="filter-group">
           <select
             value={commissionFilter}
@@ -77,7 +77,7 @@ export default function TableFilters({
             <option value="without">No Commission Configured</option>
           </select>
         </div>
-      )}
+      )} */}
       {hasActiveFilters && (
         <button onClick={onClearFilters} className="clear-filters-button">
           Clear Filters

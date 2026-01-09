@@ -4,13 +4,12 @@ import type {
   DashboardStats,
   TimeSeriesData,
 } from "../types";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./Header";
-import StatsCard from "./StatsCard";
-import ReferralCodesTable from "./ReferralCodesTable";
-import PerformanceCharts from "./PerformanceCharts";
-import LoadingSpinner from "./LoadingSpinner";
+import Sidebar from "./Sidebar";
+import HomeView from "./HomeView";
+import AnalyticsView from "./AnalyticsView";
 import ErrorMessage from "./ErrorMessage";
-import { formatCurrency } from "../config/commission";
 import { getEarliestStartDate } from "../utils/transformers";
 
 interface DashboardProps {
@@ -18,7 +17,8 @@ interface DashboardProps {
   referralCodes: ReferralCode[];
   stats: DashboardStats;
   timeSeriesData: TimeSeriesData[];
-  loading?: boolean;
+  loadingCodes?: boolean;
+  loadingHistory?: boolean;
   error?: string | null;
   onRetry?: () => void;
   onLogout?: () => void;
@@ -29,7 +29,8 @@ export default function Dashboard({
   referralCodes,
   stats,
   timeSeriesData,
-  loading = false,
+  loadingCodes = false,
+  loadingHistory = false,
   error = null,
   onRetry,
   onLogout,
@@ -39,61 +40,47 @@ export default function Dashboard({
     earliestStartDate ||
     (user.createdAt ? user.createdAt.split("T")[0] : undefined);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   if (error) {
     return <ErrorMessage message={error} onRetry={onRetry} />;
   }
 
   return (
-    <div className="dashboard">
-      <Header user={user} onLogout={onLogout} />
-      <main className="dashboard-main">
-        <div className="dashboard-content">
-          {/* Stats Cards */}
-          <div className="stats-grid">
-            <StatsCard
-              title="Total Referral Codes"
-              value={stats.totalReferralCodes}
-              subtitle={`${stats.inactiveReferralCodes} inactive · ${stats.activeReferralCodes} active · ${stats.exhaustedReferralCodes} exhausted`}
-            />
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar />
 
-            <StatsCard
-              title="Total Conversions"
-              value={stats.totalConversions.toLocaleString()}
-              subtitle={`${stats.signupConversions.toLocaleString()} signups · ${stats.trialConversions.toLocaleString()} trial · ${stats.paidConversions.toLocaleString()} paid`}
-            />
-            <StatsCard
-              title="Total Earnings"
-              value={formatCurrency(
-                stats.totalEarnings.total,
-                stats.totalEarnings.currency
-              )}
-              subtitle={`${formatCurrency(
-                stats.totalEarnings.breakdown["signup"] || 0,
-                stats.totalEarnings.currency
-              )} from signups · ${formatCurrency(
-                stats.totalEarnings.breakdown["free_trial"] || 0,
-                stats.totalEarnings.currency
-              )} from free trials · ${formatCurrency(
-                stats.totalEarnings.breakdown["purchase"] || 0,
-                stats.totalEarnings.currency
-              )} from paid`}
-            />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header user={user} onLogout={onLogout} />
+
+        <main className="flex-1 overflow-auto p-6 scroll-smooth">
+          <div className="max-w-7xl mx-auto">
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <HomeView
+                    stats={stats}
+                    referralCodes={referralCodes}
+                    loading={loadingCodes}
+                  />
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <AnalyticsView
+                    timeSeriesData={timeSeriesData}
+                    defaultStartDate={defaultChartStart}
+                    loading={loadingHistory}
+                  />
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </div>
-
-          {/* Charts */}
-          <PerformanceCharts
-            timeSeriesData={timeSeriesData}
-            defaultStartDate={defaultChartStart}
-          />
-
-          {/* Referral Codes Table */}
-          <ReferralCodesTable codes={referralCodes} />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

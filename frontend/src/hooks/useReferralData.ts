@@ -12,7 +12,8 @@ interface UseReferralDataReturn {
   referralCodes: ReferralCode[];
   stats: DashboardStats;
   timeSeriesData: TimeSeriesData[];
-  loading: boolean;
+  loadingCodes: boolean;
+  loadingHistory: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
@@ -25,74 +26,79 @@ export function useReferralData(
     createEmptyDashboardStats("USD")
   );
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingCodes, setLoadingCodes] = useState<boolean>(true);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchCodes = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
+      setLoadingCodes(true);
       // Fetch referral codes using JWT authentication (no affiliateUserId needed)
       const response = await apiService.getAffiliateReferralCodes();
 
       if (response.success && response.data) {
         // Transform backend data to frontend format (with earnings calculation)
-        // transformReferralCodes now handles the new AffiliateReferralCode structure
-        let transformedCodes = transformReferralCodes(response.data);
-
-        // Fetch purchase history for each referral code to get time series data
-        // Uses the NEW getAffiliatePurchaseHistory API which returns full event details
-        // Collect all users from all referral codes for centralized time series generation
-        const allUsers: Array<{
-          referralCreatedAt?: string | null;
-          events?: any[];
-        }> = [];
-
-        try {
-          const historyResponse = await apiService.getAffiliatePurchaseHistory(
-            "system"
-          );
-
-          if (historyResponse.success && historyResponse.data) {
-            // data is array of { referralCode, users: [ { events:[...] } ] }
-            historyResponse.data.forEach((codeGroup: any) => {
-              if (codeGroup.users && Array.isArray(codeGroup.users)) {
-                codeGroup.users.forEach((user: any) => {
-                  allUsers.push({
-                    referralCreatedAt: user?.referralCreatedAt ?? null,
-                    events: user?.events ?? [],
-                  });
-                });
-              }
-            });
-          }
-        } catch (err) {
-          console.warn(`Failed to fetch purchase history:`, err);
-        }
-
+        const transformedCodes = transformReferralCodes(response.data);
         setReferralCodes(transformedCodes);
 
         // Calculate stats
         const calculatedStats = calculateDashboardStats(transformedCodes);
         setStats(calculatedStats);
-
-        // Generate time series data using centralized helper
-        const timeSeries = buildTimeSeriesFromUsers(allUsers);
-        setTimeSeriesData(timeSeries);
       } else {
         setError(response.message || "Failed to fetch referral codes");
-        setReferralCodes([]);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       setError(errorMessage);
-      console.error("Error fetching referral data:", err);
-      setReferralCodes([]);
+      console.error("Error fetching referral codes:", err);
     } finally {
-      setLoading(false);
+      setLoadingCodes(false);
     }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const allUsers: Array<{
+        referralCreatedAt?: string | null;
+        events?: any[];
+      }> = [];
+
+      const historyResponse = await apiService.getAffiliatePurchaseHistory(
+        "system"
+      );
+
+      if (historyResponse.success && historyResponse.data) {
+        // data is array of { referralCode, users: [ { events:[...] } ] }
+        historyResponse.data.forEach((codeGroup: any) => {
+          if (codeGroup.users && Array.isArray(codeGroup.users)) {
+            codeGroup.users.forEach((user: any) => {
+              allUsers.push({
+                referralCreatedAt: user?.referralCreatedAt ?? null,
+                events: user?.events ?? [],
+              });
+            });
+          }
+        });
+      }
+
+      // Generate time series data using centralized helper
+      const timeSeries = buildTimeSeriesFromUsers(allUsers);
+      setTimeSeriesData(timeSeries);
+    } catch (err) {
+      console.warn(`Failed to fetch purchase history:`, err);
+      // Less critical, so we might not block the whole dashboard or set the main error
+      // But we can log it or show a toast if we had one here
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const fetchData = async () => {
+    setError(null);
+    // Fire both requests in parallel
+    await Promise.all([fetchCodes(), fetchHistory()]);
   };
 
   useEffect(() => {
@@ -105,7 +111,8 @@ export function useReferralData(
     referralCodes,
     stats,
     timeSeriesData,
-    loading,
+    loadingCodes,
+    loadingHistory,
     error,
     refetch: fetchData,
   };
