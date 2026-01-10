@@ -146,15 +146,30 @@ class ApiService {
    * Sets HttpOnly cookie on success
    */
   async affiliateLogin(email: string, password: string): Promise<AuthResponse> {
+    console.log("[affiliateLogin] Calling /affiliate-login API...");
     const response = await this.request<AuthResponse>("/affiliate-login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
+    console.log(
+      "[affiliateLogin] Response received:",
+      JSON.stringify(response, null, 2)
+    );
+
     // In production, ensure the response has name and email
     if (response.success) {
+      console.log(
+        "[affiliateLogin] Login successful, waiting for cookie to be set..."
+      );
       // Add small delay to ensure cookie is set before subsequent requests
       await new Promise((resolve) => setTimeout(resolve, 100));
+      console.log(
+        "[affiliateLogin] Checking document.cookie:",
+        document.cookie ? "cookies present" : "no cookies visible (HttpOnly)"
+      );
+    } else {
+      console.log("[affiliateLogin] Login failed:", response.message);
     }
 
     return response;
@@ -175,9 +190,20 @@ class ApiService {
    * Validates JWT from HttpOnly cookie
    */
   async getAffiliateUser(): Promise<AuthResponse> {
-    return this.request<AuthResponse>("/get-affiliate-user", {
-      method: "GET",
-    });
+    console.log("[getAffiliateUser] Calling /get-affiliate-user API...");
+    try {
+      const response = await this.request<AuthResponse>("/get-affiliate-user", {
+        method: "GET",
+      });
+      console.log(
+        "[getAffiliateUser] Response received:",
+        JSON.stringify(response, null, 2)
+      );
+      return response;
+    } catch (error: any) {
+      console.error("[getAffiliateUser] Error:", error.message || error);
+      throw error;
+    }
   }
 }
 
