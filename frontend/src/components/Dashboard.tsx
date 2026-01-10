@@ -36,7 +36,7 @@ export default function Dashboard({
   error = null,
   onRetry,
   onLogout,
-  rawReferralCodesResponse,
+  // rawReferralCodesResponse,
   rawPurchaseHistoryResponse,
 }: DashboardProps) {
   const earliestStartDate = getEarliestStartDate(referralCodes);

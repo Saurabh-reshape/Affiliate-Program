@@ -45,6 +45,7 @@ class ApiService {
       ...options,
       headers,
       credentials: "include", // Send HttpOnly cookies with requests
+      mode: "cors", // Enable CORS
     };
 
     try {
@@ -145,10 +146,18 @@ class ApiService {
    * Sets HttpOnly cookie on success
    */
   async affiliateLogin(email: string, password: string): Promise<AuthResponse> {
-    return this.request<AuthResponse>("/affiliate-login", {
+    const response = await this.request<AuthResponse>("/affiliate-login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
+
+    // In production, ensure the response has name and email
+    if (response.success) {
+      // Add small delay to ensure cookie is set before subsequent requests
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    return response;
   }
 
   /**

@@ -13,8 +13,8 @@ export default function AnalyticsView({
   timeSeriesData,
   defaultStartDate,
   loading = false,
-  rawPurchaseHistoryResponse,
-}: AnalyticsViewProps) {
+}: // rawPurchaseHistoryResponse,
+AnalyticsViewProps) {
   if (loading) {
     return <AnalyticsSkeleton />;
   }

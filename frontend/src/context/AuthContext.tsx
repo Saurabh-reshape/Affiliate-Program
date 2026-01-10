@@ -104,6 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const response = await apiService.affiliateLogin(email, password);
 
+        // If backend returns user details directly, use them
         if (response.success && response.name && response.email) {
           const authUser: AuthUser = {
             name: response.name,
@@ -112,6 +113,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(authUser);
           saveUserToStorage(authUser);
           return { success: true };
+        }
+
+        // In production, backend may only set cookie without user fields
+        // Fetch current user to complete login state and validate cookie was set
+        if (response.success) {
+          try {
+            // Add retry logic for production environments
+            let lastError: any;
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const me = await apiService.getAffiliateUser();
+                if (me.success && me.name && me.email) {
+                  const authUser: AuthUser = { name: me.name, email: me.email };
+                  setUser(authUser);
+                  saveUserToStorage(authUser);
+                  return { success: true };
+                }
+              } catch (e) {
+                lastError = e;
+                if (attempt < 2) {
+                  // Wait before retrying
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, 300 * (attempt + 1))
+                  );
+                }
+              }
+            }
+
+            console.error(
+              "Failed to fetch user after login on all attempts:",
+              lastError
+            );
+            // If we got here, the login response had success but couldn't get user details
+            // This might indicate a cookie/session issue in production
+          } catch (e) {
+            console.error("Unexpected error during post-login user fetch:", e);
+          }
         }
 
         return {

@@ -21,11 +21,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     try {
       const result = await login(email, password);
       if (result.success) {
+        // Clear form and trigger success callback
+        setEmail("");
+        setPassword("");
         onLoginSuccess?.();
       } else {
         setError(result.message || "Login failed. Please try again.");
       }
     } catch (err) {
+      console.error("Login submission error:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
