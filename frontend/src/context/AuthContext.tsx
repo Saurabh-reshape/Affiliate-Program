@@ -104,11 +104,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         console.log("[AuthContext.login] Starting login...");
         const response = await apiService.affiliateLogin(email, password);
-        console.log("[AuthContext.login] affiliateLogin response:", JSON.stringify(response));
+        console.log(
+          "[AuthContext.login] affiliateLogin response:",
+          JSON.stringify(response)
+        );
 
         // If backend returns user details directly, use them
         if (response.success && response.name && response.email) {
-          console.log("[AuthContext.login] Got user details directly from login response");
+          console.log(
+            "[AuthContext.login] Got user details directly from login response"
+          );
           const authUser: AuthUser = {
             name: response.name,
             email: response.email,
@@ -121,27 +126,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // In production, backend may only set cookie without user fields
         // Fetch current user to complete login state and validate cookie was set
         if (response.success) {
-          console.log("[AuthContext.login] Login success but no user details, fetching user...");
+          console.log(
+            "[AuthContext.login] Login success but no user details, fetching user..."
+          );
           try {
             // Add retry logic for production environments
             let lastError: any;
             for (let attempt = 0; attempt < 3; attempt++) {
-              console.log(`[AuthContext.login] getAffiliateUser attempt ${attempt + 1}/3`);
+              console.log(
+                `[AuthContext.login] getAffiliateUser attempt ${attempt + 1}/3`
+              );
               try {
                 const me = await apiService.getAffiliateUser();
-                console.log(`[AuthContext.login] getAffiliateUser attempt ${attempt + 1} response:`, JSON.stringify(me));
+                console.log(
+                  `[AuthContext.login] getAffiliateUser attempt ${
+                    attempt + 1
+                  } response:`,
+                  JSON.stringify(me)
+                );
                 if (me.success && me.name && me.email) {
-                  console.log("[AuthContext.login] Got user details, completing login");
+                  console.log(
+                    "[AuthContext.login] Got user details, completing login"
+                  );
                   const authUser: AuthUser = { name: me.name, email: me.email };
                   setUser(authUser);
                   saveUserToStorage(authUser);
                   return { success: true };
                 } else {
-                  console.log("[AuthContext.login] getAffiliateUser returned success but missing name/email");
+                  console.log(
+                    "[AuthContext.login] getAffiliateUser returned success but missing name/email"
+                  );
                 }
               } catch (e: any) {
                 lastError = e;
-                console.error(`[AuthContext.login] getAffiliateUser attempt ${attempt + 1} error:`, e.message || e);
+                console.error(
+                  `[AuthContext.login] getAffiliateUser attempt ${
+                    attempt + 1
+                  } error:`,
+                  e.message || e
+                );
                 if (attempt < 2) {
                   // Wait before retrying
                   await new Promise((resolve) =>
@@ -158,10 +181,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // If we got here, the login response had success but couldn't get user details
             // This might indicate a cookie/session issue in production
           } catch (e) {
-            console.error("[AuthContext.login] Unexpected error during post-login user fetch:", e);
+            console.error(
+              "[AuthContext.login] Unexpected error during post-login user fetch:",
+              e
+            );
           }
         } else {
-          console.log("[AuthContext.login] Login response was not successful:", response.message);
+          console.log(
+            "[AuthContext.login] Login response was not successful:",
+            response.message
+          );
         }
 
         return {
