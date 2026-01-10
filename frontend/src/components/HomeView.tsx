@@ -54,7 +54,15 @@ function buildConversionSubtitle(
       // Use display name from map if available, otherwise format the event type
       const displayName =
         displayNameMap.get(eventType) || formatEventType(eventType);
-      parts.push(`${count.toLocaleString()} ${displayName.toLowerCase()}`);
+      const lowerDisplayName = displayName.toLowerCase();
+
+      // If name starts with a number, wrap in parens to separate from the count
+      // e.g. "1 3 meals logged" -> "1 (3 meals logged)"
+      if (/^\d/.test(lowerDisplayName)) {
+        parts.push(`${count.toLocaleString()} (${lowerDisplayName})`);
+      } else {
+        parts.push(`${count.toLocaleString()} ${lowerDisplayName}`);
+      }
     });
   }
 

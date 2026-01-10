@@ -61,13 +61,42 @@ export function parsePurchaseEvents(
 }
 
 /**
- * Calculate revenue from purchase events
+ * Classify a raw purchase event into a commission category.
+ * Returns "free_trial", "purchase", or null (event should be ignored).
+ *
+ * Classification rules:
+ * - INITIAL_PURCHASE + TRIAL → "free_trial"
+ * - INITIAL_PURCHASE + NORMAL → "purchase"
+ * - RENEWAL (any period_type) → "purchase"
+ * - Anything else → null (ignored)
+ */
+export function trialVsPurchaseIdentifier(
+  event: PurchaseEvent
+): "free_trial" | "purchase" | null {
+  if (event.type === "INITIAL_PURCHASE" && event.period_type === "TRIAL") {
+    return "free_trial";
+  } else if (
+    event.type === "INITIAL_PURCHASE" &&
+    event.period_type === "NORMAL"
+  ) {
+    return "purchase";
+  } else if (event.type === "RENEWAL") {
+    return "purchase";
+  }
+  return null; // Event is ignored
+}
+
+/**
+ * Calculate revenue from purchase events.
+ * Includes both INITIAL_PURCHASE and RENEWAL events.
  */
 export function calculateRevenueFromEvents(events: PurchaseEvent[]): number {
   return events.reduce((total, event) => {
-    // Only count INITIAL_PURCHASE with NORMAL period_type as revenue
-    // TRIAL purchases have price 0, so we can include all INITIAL_PURCHASE
-    if (event.type === "INITIAL_PURCHASE") {
+    // Count revenue from INITIAL_PURCHASE (NORMAL) and RENEWAL events
+    if (event.type === "INITIAL_PURCHASE" && event.period_type === "NORMAL") {
+      return total + (event.price || 0);
+    }
+    if (event.type === "RENEWAL") {
       return total + (event.price || 0);
     }
     return total;
@@ -75,7 +104,14 @@ export function calculateRevenueFromEvents(events: PurchaseEvent[]): number {
 }
 
 /**
- * Count conversions from purchase events
+ * Count conversions from purchase events using one-time commission model.
+ * Each user is counted only once for trial and only once for purchase.
+ *
+ * A user can be counted in BOTH trial AND purchase if they have both.
+ * RENEWAL events count as "purchase" (user who only has renewals counts as purchase).
+ *
+ * @param events - Array of purchase events (should be for a single user)
+ * @returns { trial: 0|1, paid: 0|1 } - Binary flags for this user
  */
 export function countConversionsFromEvents(events: PurchaseEvent[]): {
   trial: number;
@@ -86,17 +122,44 @@ export function countConversionsFromEvents(events: PurchaseEvent[]): {
     paid: 0,
   };
 
+  // One-time commission: count each type only once per user
+  let hasFreeTrial = false;
+  let hasPurchase = false;
+
   events.forEach((event) => {
-    if (event.type === "INITIAL_PURCHASE") {
-      if (event.period_type === "TRIAL") {
-        conversions.trial++;
-      } else if (event.period_type === "NORMAL") {
-        conversions.paid++;
-      }
+    const category = trialVsPurchaseIdentifier(event);
+    if (category === "free_trial" && !hasFreeTrial) {
+      hasFreeTrial = true;
+      conversions.trial = 1;
+    } else if (category === "purchase" && !hasPurchase) {
+      hasPurchase = true;
+      conversions.paid = 1;
     }
   });
 
   return conversions;
+}
+
+/**
+ * Count conversions across multiple users' events.
+ * Uses one-time commission model: each user counted only once per event type.
+ *
+ * @param usersEvents - Array of event arrays, one per user
+ * @returns Total unique users with trial and unique users with purchase
+ */
+export function countConversionsFromMultipleUsers(
+  usersEvents: PurchaseEvent[][]
+): { trial: number; paid: number } {
+  return usersEvents.reduce(
+    (totals, userEvents) => {
+      const userConversions = countConversionsFromEvents(userEvents);
+      return {
+        trial: totals.trial + userConversions.trial,
+        paid: totals.paid + userConversions.paid,
+      };
+    },
+    { trial: 0, paid: 0 }
+  );
 }
 
 /**

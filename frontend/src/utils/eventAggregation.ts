@@ -26,10 +26,18 @@ export type { EventUnionMap, EventMetadata } from "../types/commission";
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Event types that represent purchase/payment actions.
+ * These are used for display categorization.
+ *
+ * Note: RENEWAL is treated as "purchase" for commission purposes.
+ * Stats show unique user counts, not event counts.
+ */
 const PURCHASE_EVENT_TYPES = new Set([
   "purchase",
   "free_trial",
   "subscription",
+  "renewal", // RENEWAL events count as purchase for commission
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
