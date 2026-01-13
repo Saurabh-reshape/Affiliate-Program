@@ -190,18 +190,13 @@ class ApiService {
    * Validates JWT from HttpOnly cookie
    */
   async getAffiliateUser(): Promise<AuthResponse> {
-    console.log("[getAffiliateUser] Calling /get-affiliate-user API...");
     try {
       const response = await this.request<AuthResponse>("/get-affiliate-user", {
         method: "GET",
       });
-      console.log(
-        "[getAffiliateUser] Response received:",
-        JSON.stringify(response, null, 2)
-      );
+
       return response;
     } catch (error: any) {
-      console.error("[getAffiliateUser] Error:", error.message || error);
       throw error;
     }
   }
