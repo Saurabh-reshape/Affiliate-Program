@@ -12,7 +12,7 @@ interface AnalyticsViewProps {
 export default function AnalyticsView({
   timeSeriesData,
   defaultStartDate,
-  rawPurchaseHistoryResponse,
+  // rawPurchaseHistoryResponse,
   loading = false,
 }: AnalyticsViewProps) {
   if (loading) {
