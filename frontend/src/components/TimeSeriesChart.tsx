@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import {
   LineChart,
   Line,
@@ -165,6 +165,7 @@ export default function TimeSeriesChart({
       ? getAllTimeStartDate() ?? getLast30StartDate()
       : getLast30StartDate();
   const resetEndDate = todayIso;
+  const chartId = useId();
 
   return (
     <div className="chart-card">
@@ -254,7 +255,7 @@ export default function TimeSeriesChart({
         </div>
       )}
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData}>
+        <LineChart data={chartData} id={chartId}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="dateFormatted"
