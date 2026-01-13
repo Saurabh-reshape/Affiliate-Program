@@ -99,6 +99,18 @@ export default function UserDetailView({
       ? filteredEvents
       : filteredEvents.filter((e) => e.type === eventTypeFilter);
 
+  const eventDisplayNames = useMemo(() => {
+    const map = new Map<string, string>();
+    if (commissionConfig) {
+      commissionConfig.forEach((c) => {
+        if (c.display_name) {
+          map.set(c.event, c.display_name);
+        }
+      });
+    }
+    return map;
+  }, [commissionConfig]);
+
   const getSortIcon = (key: keyof PurchaseEvent) => {
     if (sortConfig?.key !== key) return "⇅";
     return sortConfig.direction === "asc" ? "↑" : "↓";
@@ -262,6 +274,7 @@ export default function UserDetailView({
                     events.filter((e) => e.type === "INITIAL_PURCHASE")
                   ) || undefined
                 }
+                eventDisplayNames={eventDisplayNames}
               />
             </div>
           )}

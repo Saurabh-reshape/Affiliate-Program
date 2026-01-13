@@ -10,7 +10,7 @@ export default function AnalyticsSkeleton() {
       </div>
 
       {/* Chart Canvas */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center mb-6">
           <Skeleton className="h-6 w-1/3" />
         </div>

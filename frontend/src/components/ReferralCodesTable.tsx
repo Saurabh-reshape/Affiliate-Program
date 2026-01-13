@@ -199,18 +199,20 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
         <h2 className="section-title">
           My Referral Codes ({filteredAndSortedCodes.length})
         </h2>
-        <TableFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          usageFilter={usageFilter}
-          onUsageFilterChange={setUsageFilter}
-          commissionFilter={commissionFilter}
-          onCommissionFilterChange={setCommissionFilter}
-          onClearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-        />
+        {codes.length >= 10 && (
+          <TableFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            usageFilter={usageFilter}
+            onUsageFilterChange={setUsageFilter}
+            commissionFilter={commissionFilter}
+            onCommissionFilterChange={setCommissionFilter}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
       </div>
       <div className="table-container">
         <table className="referral-codes-table">

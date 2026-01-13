@@ -49,7 +49,9 @@ export default function Header({ user, onLogout }: HeaderProps) {
     <header className="dashboard-header">
       <div className="header-content">
         <div className="header-left">
-          <h1 className="dashboard-title">Affiliate Dashboard</h1>
+          <div className="flex items-center">
+            <img src="/Logo.png" alt="Reshape" className="h-8 object-contain" />
+          </div>
         </div>
         <div className="header-right">
           <div className="user-info">

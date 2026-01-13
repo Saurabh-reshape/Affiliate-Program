@@ -73,6 +73,15 @@ export default function ReferralCodeDetailView({
     searchKeys: ["name", "email", "userId"],
   });
 
+  const eventDisplayNames = new Map<string, string>();
+  if (referralCode.commissionConfig) {
+    referralCode.commissionConfig.forEach((c) => {
+      if (c.display_name) {
+        eventDisplayNames.set(c.event, c.display_name);
+      }
+    });
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -253,6 +262,7 @@ export default function ReferralCodeDetailView({
               timeSeriesData={timeSeriesData}
               title={`Performance for ${referralCode.code}`}
               defaultStartDate={referralCode.createdAt.split("T")[0]}
+              eventDisplayNames={eventDisplayNames}
             />
           </div>
 

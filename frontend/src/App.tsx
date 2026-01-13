@@ -37,7 +37,7 @@ function AppContent() {
     email: user.email,
     avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
       user.name
-    )}&background=6366f1&color=fff`,
+    )}&background=40E5B7&color=0E1412`,
   };
 
   return (

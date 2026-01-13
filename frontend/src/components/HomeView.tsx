@@ -1,13 +1,18 @@
 import StatsCard from "./StatsCard";
 import ReferralCodesTable from "./ReferralCodesTable";
+import PerformanceCharts from "./PerformanceCharts";
 import HomeSkeleton from "./HomeSkeleton";
+import AnalyticsSkeleton from "./AnalyticsSkeleton";
 import { formatCurrency } from "../config/commission";
-import type { ReferralCode, DashboardStats } from "../types";
+import type { ReferralCode, DashboardStats, TimeSeriesData } from "../types";
 
 interface HomeViewProps {
   stats: DashboardStats;
   referralCodes: ReferralCode[];
-  loading?: boolean;
+  loadingCodes?: boolean;
+  timeSeriesData: TimeSeriesData[];
+  defaultStartDate?: string;
+  loadingHistory?: boolean;
 }
 
 /**
@@ -97,44 +102,60 @@ function buildEarningsSubtitle(
 export default function HomeView({
   stats,
   referralCodes,
-  loading = false,
+  loadingCodes = false,
+  timeSeriesData,
+  defaultStartDate,
+  loadingHistory = false,
 }: HomeViewProps) {
   // Build display name map from all referral codes
   const displayNameMap = buildEventDisplayNameMap(referralCodes);
 
-  if (loading) {
-    return <HomeSkeleton />;
-  }
-
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <StatsCard
-          title="Total Referral Codes"
-          value={stats.totalReferralCodes}
-          subtitle={`${stats.inactiveReferralCodes} inactive · ${stats.activeReferralCodes} active · ${stats.exhaustedReferralCodes} exhausted`}
-        />
+      {loadingCodes ? (
+        <HomeSkeleton />
+      ) : (
+        <>
+          <div className="stats-grid">
+            <StatsCard
+              title="Total Referral Codes"
+              value={stats.totalReferralCodes}
+              subtitle={`${stats.inactiveReferralCodes} inactive · ${stats.activeReferralCodes} active · ${stats.exhaustedReferralCodes} exhausted`}
+            />
 
-        <StatsCard
-          title="Total Conversions"
-          value={Object.values(stats.eventStats || {})
-            .reduce((sum, count) => sum + count, 0)
-            .toLocaleString()}
-          subtitle={buildConversionSubtitle(stats, displayNameMap)}
+            <StatsCard
+              title="Total Conversions"
+              value={Object.values(stats.eventStats || {})
+                .reduce((sum, count) => sum + count, 0)
+                .toLocaleString()}
+              subtitle={buildConversionSubtitle(stats, displayNameMap)}
+            />
+            <StatsCard
+              title="Total Earnings"
+              value={formatCurrency(
+                stats.totalEarnings.total,
+                stats.totalEarnings.currency
+              )}
+              subtitle={buildEarningsSubtitle(stats, displayNameMap)}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Performance Charts */}
+      {loadingHistory ? (
+        <AnalyticsSkeleton />
+      ) : (
+        <PerformanceCharts
+          timeSeriesData={timeSeriesData}
+          defaultStartDate={defaultStartDate}
+          eventDisplayNames={displayNameMap}
         />
-        <StatsCard
-          title="Total Earnings"
-          value={formatCurrency(
-            stats.totalEarnings.total,
-            stats.totalEarnings.currency
-          )}
-          subtitle={buildEarningsSubtitle(stats, displayNameMap)}
-        />
-      </div>
+      )}
 
       {/* Referral Codes Table */}
-      <ReferralCodesTable codes={referralCodes} />
+      {!loadingCodes && <ReferralCodesTable codes={referralCodes} />}
     </div>
   );
 }

@@ -8,7 +8,7 @@ export default function HomeSkeleton() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="stats-card bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+            className="stats-card bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
           >
             <div className="flex justify-between items-start mb-4">
               <Skeleton className="h-4 w-1/3" />
@@ -20,7 +20,7 @@ export default function HomeSkeleton() {
       </div>
 
       {/* Table Skeleton */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <Skeleton className="h-6 w-48" />
           <div className="flex gap-2">

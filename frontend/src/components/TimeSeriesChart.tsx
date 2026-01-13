@@ -267,7 +267,20 @@ export default function TimeSeriesChart({
             ticks={integerTicks}
             domain={[0, "auto"]}
           />
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-primary)",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px var(--shadow-primary)",
+              color: "var(--text-primary)",
+            }}
+            labelStyle={{
+              color: "var(--text-primary)",
+              fontWeight: "600",
+              marginBottom: "4px",
+            }}
+          />
           <Legend />
           {config.lines.map((line) => (
             <Line

@@ -7,6 +7,7 @@ interface PerformanceChartsProps {
   defaultStartDate?: string;
   defaultEndDate?: string;
   showDateRangeSelector?: boolean;
+  eventDisplayNames?: Map<string, string>;
 }
 
 const COLORS = [
@@ -26,6 +27,7 @@ export default function PerformanceCharts({
   defaultStartDate,
   defaultEndDate,
   showDateRangeSelector = true,
+  eventDisplayNames,
 }: PerformanceChartsProps) {
   // Collect all unique event keys from all data points
   const uniqueEvents = new Set<string>();
@@ -67,10 +69,12 @@ export default function PerformanceCharts({
   // Create lines with consistent colors
   orderedEvents.forEach((event, index) => {
     // Parse name for display (e.g. free_trial -> Free Trial)
-    const displayName = event
-      .split("_")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+    const displayName =
+      eventDisplayNames?.get(event) ||
+      event
+        .split("_")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
 
     // Use blue for signup (primary), then cycle through other colors
     const color =
