@@ -12,9 +12,9 @@ interface AnalyticsViewProps {
 export default function AnalyticsView({
   timeSeriesData,
   defaultStartDate,
+  rawPurchaseHistoryResponse,
   loading = false,
-}: // rawPurchaseHistoryResponse,
-AnalyticsViewProps) {
+}: AnalyticsViewProps) {
   if (loading) {
     return <AnalyticsSkeleton />;
   }
@@ -32,7 +32,7 @@ AnalyticsViewProps) {
       />
 
       {/* Debug Section */}
-      {/* {rawPurchaseHistoryResponse && (
+      {rawPurchaseHistoryResponse && (
         <div className="mt-8 border-t border-gray-200 pt-8 no-print">
           <details className="group">
             <summary className="text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-700 list-none flex items-center gap-2">
@@ -46,7 +46,7 @@ AnalyticsViewProps) {
             </pre>
           </details>
         </div>
-      )} */}
+      )}
     </div>
   );
 }

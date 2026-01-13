@@ -36,7 +36,7 @@ export default function Dashboard({
   error = null,
   onRetry,
   onLogout,
-  // rawReferralCodesResponse,
+  rawReferralCodesResponse,
   rawPurchaseHistoryResponse,
 }: DashboardProps) {
   const earliestStartDate = getEarliestStartDate(referralCodes);
@@ -85,7 +85,7 @@ export default function Dashboard({
             </Routes>
 
             {/* Debug Section */}
-            {/* {rawReferralCodesResponse && (
+            {rawReferralCodesResponse && (
               <div className="mt-8 border-t border-gray-200 pt-8 no-print">
                 <details className="group">
                   <summary className="text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-700 list-none flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function Dashboard({
                   </pre>
                 </details>
               </div>
-            )} */}
+            )}
           </div>
         </main>
       </div>
