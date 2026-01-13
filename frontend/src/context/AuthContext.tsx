@@ -120,7 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (response.success) {
           try {
             // Add retry logic for production environments
-            let lastError: any;
+            // let lastError: any;
             for (let attempt = 0; attempt < 3; attempt++) {
               try {
                 const me = await apiService.getAffiliateUser();
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 } else {
                 }
               } catch (e: any) {
-                lastError = e;
+                // lastError = e;
 
                 if (attempt < 2) {
                   // Wait before retrying
