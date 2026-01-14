@@ -20,7 +20,7 @@
 }
 
 .login-content {
-  padding: 2.5rem;
+  padding: 1.25rem 2.5rem 2.5rem;
 }
 
 @keyframes slideUp {
@@ -41,7 +41,7 @@
 
 .login-brand-header {
   background: #000;
-  height: 68px; /* compact header height */
+  height: 80px; /* compact header height */
   padding: 0; /* remove extra padding */
   display: flex;
   align-items: center;
@@ -85,6 +85,7 @@
 }
 
 .form-input {
+  width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-primary);
   border-radius: 0.5rem;

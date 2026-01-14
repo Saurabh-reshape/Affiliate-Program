@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 interface LoginPageProps {
   onLoginSuccess?: () => void;
@@ -44,7 +45,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         </div>
         <div className="login-content">
           <div className="login-header">
-            <h1 className="login-title">Affiliate Dashboard</h1>
+            <h1 className="login-title">Partner Portal</h1>
             <p className="login-subtitle">Sign in to your account</p>
           </div>
 
@@ -91,19 +92,21 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   disabled={isSubmitting || isLoading}
                   style={{
                     position: "absolute",
-                    right: "8px",
+                    right: "10px",
                     top: "50%",
                     transform: "translateY(-50%)",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    padding: "4px 8px",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     color: "#6b7280",
-                    fontSize: "14px",
                   }}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "🙈" : "👁️"}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
