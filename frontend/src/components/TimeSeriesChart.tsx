@@ -19,6 +19,7 @@ export interface TimeSeriesChartConfig {
   defaultEndDate?: string; // If not provided, will use current date
   showDateRangeSelector?: boolean;
   height?: number;
+  yAxisLabel?: string;
   lines: Array<{
     dataKey: string;
     name: string;
@@ -267,6 +268,20 @@ export default function TimeSeriesChart({
             allowDecimals={false}
             ticks={integerTicks}
             domain={[0, "auto"]}
+            label={
+              config.yAxisLabel
+                ? {
+                    value: config.yAxisLabel,
+                    angle: -90,
+                    position: "insideLeft",
+                    style: {
+                      textAnchor: "middle",
+                      fill: "var(--text-secondary)",
+                      fontSize: 12,
+                    },
+                  }
+                : undefined
+            }
           />
           <Tooltip
             contentStyle={{

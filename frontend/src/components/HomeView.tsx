@@ -5,6 +5,7 @@ import HomeSkeleton from "./HomeSkeleton";
 import AnalyticsSkeleton from "./AnalyticsSkeleton";
 import { formatCurrency } from "../config/commission";
 import type { ReferralCode, DashboardStats, TimeSeriesData } from "../types";
+import type { CommissionRule } from "../types/commission";
 
 interface HomeViewProps {
   stats: DashboardStats;
@@ -110,6 +111,20 @@ export default function HomeView({
   // Build display name map from all referral codes
   const displayNameMap = buildEventDisplayNameMap(referralCodes);
 
+  // Aggregate commission rules for the consolidated chart
+  // This enables the "Earnings" view mode. If rates vary by code, this uses the first found rate.
+  const aggregatedCommissionRules: CommissionRule[] = [];
+  const seenRuleEvents = new Set<string>();
+
+  referralCodes.forEach((code) => {
+    code.commissionConfig?.forEach((rule) => {
+      if (!seenRuleEvents.has(rule.event)) {
+        seenRuleEvents.add(rule.event);
+        aggregatedCommissionRules.push(rule);
+      }
+    });
+  });
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -151,6 +166,7 @@ export default function HomeView({
           timeSeriesData={timeSeriesData}
           defaultStartDate={defaultStartDate}
           eventDisplayNames={displayNameMap}
+          commissionRules={aggregatedCommissionRules}
         />
       )}
 
