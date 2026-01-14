@@ -246,6 +246,7 @@ export default function PerformanceCharts({
     showDateRangeSelector: false,
     height: 400,
     yAxisLabel: viewMode === "count" ? "Count" : "Amount ($)",
+    isEarningsMode: viewMode === "earnings",
     lines: lines.filter((l) => metricsToShow.has(l.dataKey)),
   };
 

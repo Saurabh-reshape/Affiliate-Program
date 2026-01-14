@@ -20,6 +20,7 @@ export interface TimeSeriesChartConfig {
   showDateRangeSelector?: boolean;
   height?: number;
   yAxisLabel?: string;
+  isEarningsMode?: boolean; // If true, format values with $ symbol after number
   lines: Array<{
     dataKey: string;
     name: string;
@@ -268,6 +269,12 @@ export default function TimeSeriesChart({
             allowDecimals={false}
             ticks={integerTicks}
             domain={[0, "auto"]}
+            tickFormatter={(value) => {
+              if (config.isEarningsMode && typeof value === "number") {
+                return `${value.toFixed(0)}$`;
+              }
+              return value.toString();
+            }}
             label={
               config.yAxisLabel
                 ? {
@@ -295,6 +302,12 @@ export default function TimeSeriesChart({
               color: "var(--text-primary)",
               fontWeight: "600",
               marginBottom: "4px",
+            }}
+            formatter={(value: number | undefined) => {
+              if (config.isEarningsMode && typeof value === "number") {
+                return `${value.toFixed(2)}$`;
+              }
+              return value;
             }}
           />
           <Legend />
