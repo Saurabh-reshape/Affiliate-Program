@@ -45,7 +45,7 @@ function buildEventDisplayNameMap(
 
 /**
  * Build dynamic conversion subtitle from eventStats
- * Shows count of each event type
+ * Only shows events that are in commission config (exist in displayNameMap)
  */
 function buildConversionSubtitle(
   stats: DashboardStats,
@@ -53,12 +53,15 @@ function buildConversionSubtitle(
 ): string {
   const parts: string[] = [];
 
-  // Add all event stats
+  // Only show events that are in commission config (exist in displayNameMap)
   if (stats.eventStats && Object.keys(stats.eventStats).length > 0) {
     Object.entries(stats.eventStats).forEach(([eventType, count]) => {
-      // Use display name from map if available, otherwise format the event type
-      const displayName =
-        displayNameMap.get(eventType) || formatEventType(eventType);
+      // Only include events that are in commission config
+      if (!displayNameMap.has(eventType)) {
+        return;
+      }
+      // Use display name from map
+      const displayName = displayNameMap.get(eventType)!;
       const lowerDisplayName = displayName.toLowerCase();
 
       // If name starts with a number, wrap in parens to separate from the count
@@ -139,8 +142,9 @@ export default function HomeView({
 
             <StatsCard
               title="Total Conversions"
-              value={Object.values(stats.eventStats || {})
-                .reduce((sum, count) => sum + count, 0)
+              value={Object.entries(stats.eventStats || {})
+                .filter(([eventType]) => displayNameMap.has(eventType))
+                .reduce((sum, [, count]) => sum + count, 0)
                 .toLocaleString()}
               subtitle={buildConversionSubtitle(stats, displayNameMap)}
             />

@@ -235,12 +235,12 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
               ))}
 
               {/* More fixed columns */}
-              <th
+              {/* <th
                 onClick={() => handleSort("totalConversions")}
                 className="sortable"
               >
                 Total Conversions {getSortIcon("totalConversions")}
-              </th>
+              </th> */}
               <th onClick={() => handleSort("earnings")} className="sortable">
                 Earnings {getSortIcon("earnings")}
               </th>
@@ -291,11 +291,11 @@ export default function ReferralCodesTable({ codes }: ReferralCodesTableProps) {
                   })}
 
                   {/* More fixed columns */}
-                  <td>
+                  {/* <td>
                     {Object.values(code.eventStats || {})
                       .reduce((sum, c) => sum + c, 0)
                       .toLocaleString()}
-                  </td>
+                  </td> */}
                   <td className="earnings-cell">
                     {code.earnings
                       ? formatCurrency(

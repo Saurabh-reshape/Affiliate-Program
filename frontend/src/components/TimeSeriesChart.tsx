@@ -82,7 +82,7 @@ export default function TimeSeriesChart({
       )}
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={chartData} id={chartId}>
-          <CartesianGrid strokeDasharray="3 3" />
+          {/*<CartesianGrid strokeDasharray="3 3" />*/}
           <XAxis
             dataKey="dateFormatted"
             tick={{ fontSize: 12 }}
@@ -138,7 +138,7 @@ export default function TimeSeriesChart({
           {config.lines.map((line) => (
             <Line
               key={line.dataKey}
-              type="monotone"
+              type="natural"
               dataKey={line.dataKey}
               stroke={line.color}
               strokeWidth={2}
